@@ -1,5 +1,5 @@
 export async function GET(req) {
-  return Response.json({
+  Response.json({
     status: true,
   });
 }

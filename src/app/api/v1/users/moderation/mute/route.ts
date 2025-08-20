@@ -29,7 +29,7 @@ export async function POST(req) {
     timestamp: data.timestamp,
     mod: data.mod as Id<"users">,
   })
-  return Response.json({
+  Response.json({
     status: true,
   })
 }
