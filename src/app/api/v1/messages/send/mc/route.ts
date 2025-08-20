@@ -34,4 +34,8 @@ export async function POST(req) {
     loc: "minecraft",
     timestamp: data.timestamp,
   });
+
+  return Response.json({
+    status: true,
+  })
 }

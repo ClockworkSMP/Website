@@ -71,4 +71,7 @@ export async function POST(req) {
     user: user._id,
     joinedAt: data.timestamp,
   });
+  return Response.json({
+    status: true,
+  })
 }
