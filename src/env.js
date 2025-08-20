@@ -40,7 +40,7 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_CONVEX_URL: process.env.CONVEX_URL,
+    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
     BANNED_DISCORDS: process.env.BANNED_DISCORDS,
     BANNED_MINECRAFT: process.env.BANNED_MINECRAFT,
     AUTH_TOKEN: process.env.AUTH_TOKEN,
