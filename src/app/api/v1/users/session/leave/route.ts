@@ -15,7 +15,7 @@ export async function POST(req) {
       minecraft: data.username,
     }))
   ) {
-    Response.json({
+    return Response.json({
       status: false,
       reason: "Invalid username",
       code: 1,
@@ -37,7 +37,7 @@ export async function POST(req) {
     user: user._id,
     joinedAt: data.timestamp,
   });
-  Response.json({
+  return Response.json({
     status: true,
-  })
+  });
 }

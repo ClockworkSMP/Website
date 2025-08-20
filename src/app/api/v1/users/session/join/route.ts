@@ -27,7 +27,7 @@ export async function POST(req) {
       minecraft: data.username,
     }))
   ) {
-    Response.json({
+    return Response.json({
       status: false,
       reason: "Invalid username",
       code: 1,
@@ -35,7 +35,7 @@ export async function POST(req) {
         username: data.username,
       },
     });
-    return
+    return;
   }
   const user = await fetchQuery(api.users.queryUser, {
     minecraft: data.username,
@@ -46,7 +46,7 @@ export async function POST(req) {
   }
 
   if (user.discord in env.BANNED_DISCORDS) {
-    Response.json({
+    return Response.json({
       status: false,
       reason: "Invalid username",
       code: 201,
@@ -54,11 +54,11 @@ export async function POST(req) {
         username: data.username,
       },
     });
-    return
+    return;
   }
 
   if (user.minecraft in env.BANNED_MINECRAFT) {
-    Response.json({
+    return Response.json({
       status: false,
       reason: "Invalid username",
       code: 202,
@@ -66,14 +66,14 @@ export async function POST(req) {
         username: data.username,
       },
     });
-    return
+    return;
   }
 
   await fetchMutation(api.sessions.createSession, {
     user: user._id,
     joinedAt: data.timestamp,
   });
-  Response.json({
+  return Response.json({
     status: true,
-  })
+  });
 }

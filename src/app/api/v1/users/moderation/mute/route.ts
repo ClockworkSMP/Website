@@ -20,7 +20,7 @@ type Data = {
 };
 
 export async function POST(req) {
-  const data = schema.parse(await req.json() as Data);
+  const data = schema.parse((await req.json()) as Data);
 
   await fetchMutation(api.moderation.muteUser, {
     user: data.user as Id<"users">,
@@ -28,8 +28,8 @@ export async function POST(req) {
     duration: data.duration,
     timestamp: data.timestamp,
     mod: data.mod as Id<"users">,
-  })
-  Response.json({
+  });
+  return Response.json({
     status: true,
-  })
+  });
 }

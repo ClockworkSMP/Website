@@ -17,7 +17,7 @@ export async function POST(req) {
     data.fromUUID &&
     !(await fetchQuery(api.users.isValidUser, { minecraft: data.fromUUID }))
   ) {
-    Response.json({
+    return Response.json({
       status: false,
       reason: "Invalid fromUUID",
       data: {
@@ -34,7 +34,7 @@ export async function POST(req) {
     timestamp: data.timestamp,
   });
 
-  Response.json({
+  return Response.json({
     status: true,
-  })
+  });
 }

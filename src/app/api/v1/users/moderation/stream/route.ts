@@ -95,5 +95,5 @@ export async function GET() {
     Connection: "keep-alive",
   };
 
-  return new Response(stream, { headers });
+  return new return Response(stream, { headers });
 }

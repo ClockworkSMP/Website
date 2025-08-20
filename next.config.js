@@ -4,7 +4,6 @@
  */
 /** @type {import("next").NextConfig} */
 const config = {
-  SKIP_ENV_VALIDATION: true,
   typescript: {
     ignoreBuildErrors: true,
   },

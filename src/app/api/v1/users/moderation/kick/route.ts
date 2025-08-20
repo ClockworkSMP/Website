@@ -25,8 +25,8 @@ export async function POST(req) {
     reason: data.reason,
     timestamp: data.timestamp,
     mod: data.mod as Id<"users">,
-  })
-  Response.json({
+  });
+  return Response.json({
     status: true,
-  })
+  });
 }
