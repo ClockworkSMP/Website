@@ -3,3 +3,9 @@ export async function GET(req) {
     status: true,
   });
 }
+
+/*
+Ok: { status: true }
+
+Fail: { status: false, reason: string, method: ("throw" | "kick" | "ban" | "nuke")[] }
+*/

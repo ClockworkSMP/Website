@@ -3,6 +3,17 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "../../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../../convex/_generated/dataModel";
 
+const Codes = {
+  0: "Success",
+  1: "Invalid permission",
+  101: "Timedout",
+  102: "Banned",
+  2: "Invalid message",
+  3: "Invalid timestamp",
+  4: "Invalid fromUUID",
+  5: "Error",
+}
+
 export async function POST(req) {
   const schema = z.object({
     message: z.string(),
@@ -20,6 +31,48 @@ export async function POST(req) {
     return Response.json({
       status: false,
       reason: "Invalid fromUUID",
+      code: 4,
+      data: {
+        fromUUID: data.fromUUID,
+      },
+    });
+  }
+
+  const user = await fetchQuery(api.users.queryUser, {
+    minecraft: data.fromUUID,
+  });
+
+  if (!user) {
+    return Response.json({
+      status: false,
+      reason: "User not found",
+      code: 4,
+      data: {
+        fromUUID: data.fromUUID,
+      },
+    });
+  }
+
+  if (user.status === "banned") {
+    return Response.json({
+      status: false,
+      reason: "Banned",
+      code: 102,
+      data: {
+        fromUUID: data.fromUUID,
+      },
+    });
+  }
+
+  const timedout = await fetchQuery(api.moderation.isTimedout, {
+    user: user._id,
+  });
+
+  if (timedout) {
+    return Response.json({
+      status: false,
+      reason: "Timedout",
+      code: 101,
       data: {
         fromUUID: data.fromUUID,
       },
@@ -36,5 +89,6 @@ export async function POST(req) {
 
   return Response.json({
     status: true,
+    code: 0
   });
 }

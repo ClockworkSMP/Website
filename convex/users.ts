@@ -30,7 +30,7 @@ export const queryUser = query({
 
 export const registerUser = mutation({
   args: {
-    discord: v.string(),
+    discord: v.union(v.string(), v.null()),
     minecraft: v.string(),
     registeredAt: v.optional(v.number()),
   },
@@ -38,7 +38,7 @@ export const registerUser = mutation({
     return await ctx.db.insert("users", {
       discord: args.discord,
       minecraft: args.minecraft,
-      registeredAt: args.registeredAt ? args.registeredAt : Date.now(),
+      registeredAt: args.registeredAt ?? Date.now(),
       status: "registered",
     });
   },

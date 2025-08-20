@@ -6,7 +6,7 @@ const schema = z.object({
 
 export async function GET(req) {
   const {username} = schema.parse(await req.json());
-  if (username in env.banned_usernames) {
+  if (username in env.BANNED_MINECRAFT) {
     return Response.json({
       status: false,
       reason: "Error: Code 5",
