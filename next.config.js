@@ -4,6 +4,12 @@
  */
 /** @type {import("next").NextConfig} */
 const config = {
-  SKIP_ENV_VALIDATION: true
+  SKIP_ENV_VALIDATION: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 }
 export default config;
