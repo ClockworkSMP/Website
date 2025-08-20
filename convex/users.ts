@@ -51,11 +51,16 @@ export const isValidUser = query({
     discord: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Check if any valid argument is provided
+    if (!args.id && !args.minecraft && !args.discord) {
+      return false;
+    }
+
     if (args.id) {
       const user = await ctx.db.get(args.id);
       return user !== null;
     }
-    if (args.minecraft) {
+    if (args.minecraft && args.minecraft.trim() !== "") {
       const users = await ctx.db
         .query("users")
         .withIndex("minecraft", (q) =>
@@ -64,7 +69,7 @@ export const isValidUser = query({
         .collect();
       return users.length > 0;
     }
-    if (args.discord) {
+    if (args.discord && args.discord.trim() !== "") {
       const users = await ctx.db
         .query("users")
         .withIndex("discord", (q) => q.eq("discord", args.discord as string))
@@ -72,6 +77,7 @@ export const isValidUser = query({
       return users.length > 0;
     }
 
-    throw new Error("Invalid arguments");
+    // If we get here, the arguments were provided but invalid (empty strings)
+    return false;
   },
 });
