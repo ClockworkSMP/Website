@@ -19,7 +19,7 @@ export async function POST(req) {
     username: z.string(),
     timestamp: z.number(),
   });
-  const data = schema.parse(req.json());
+  const data = schema.parse(await req.json());
 
   if (
     data.username &&
