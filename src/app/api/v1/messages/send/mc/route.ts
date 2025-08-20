@@ -8,7 +8,6 @@ export async function POST(req) {
     message: z.string(),
     fromUUID: z.string(),
     toUUID: z.optional(z.string()),
-    msgId: z.string(),
     timestamp: z.number(),
   });
 
