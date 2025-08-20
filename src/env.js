@@ -8,7 +8,6 @@ export const env = createEnv({
    */
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]),
-      convex_url: z.string(),
   banned_discords: z.preprocess((val) => {
     if (!(typeof val === "string")) {
       return val;
@@ -32,6 +31,7 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_CONVEX_URL: z.string(),
   },
 
   /**
@@ -40,7 +40,7 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-    convex_url: process.env.convex_url,
+    NEXT_PUBLIC_CONVEX_URL: process.env.convex_url,
     banned_discords: process.env.banned_discords,
     banned_minecraft: process.env.banned_minecraft,
     auth_token: process.env.auth_token,

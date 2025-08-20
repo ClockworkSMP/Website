@@ -35,8 +35,8 @@ export async function POST(req) {
         username: data.username,
       },
     });
+    return
   }
-
   const user = await fetchQuery(api.users.queryUser, {
     minecraft: data.username,
   });
@@ -54,6 +54,7 @@ export async function POST(req) {
         username: data.username,
       },
     });
+    return
   }
 
   if (user.minecraft in env.banned_minecraft) {
@@ -65,6 +66,7 @@ export async function POST(req) {
         username: data.username,
       },
     });
+    return
   }
 
   await fetchMutation(api.sessions.createSession, {
