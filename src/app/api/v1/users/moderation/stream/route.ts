@@ -1,5 +1,4 @@
-import { api } from "convex/_generated/api";
-import type { Id } from "convex/_generated/dataModel";
+import { api } from "../../../../../../../convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import EventEmitter from "events";
 

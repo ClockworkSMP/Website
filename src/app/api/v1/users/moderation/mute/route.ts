@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { fetchMutation } from "convex/nextjs";
-import type { Id } from "convex/_generated/dataModel";
-import { api } from "convex/_generated/api";
+import type { Id } from "../../../../../../../convex/_generated/dataModel";
+import { api } from "../../../../../../../convex/_generated/api";
 
 const schema = z.object({
   user: z.string(),
