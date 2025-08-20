@@ -25,7 +25,7 @@ export default defineSchema({
 	moderationLog: defineTable({
 		user: v.id("users"),
 		moderator: v.id("users"),
-		action: v.union(v.literal("kick"), v.literal("ban"), v.literal("mute")),
+		action: v.union(v.literal("kick"), v.literal("ban"), v.literal("mute"), v.literal("warn")),
 		reason: v.string(),
 		timestamp: v.number(),
 		duration: v.optional(v.union(v.null(), v.number())), 

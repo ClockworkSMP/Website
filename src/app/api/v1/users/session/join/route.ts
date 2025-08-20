@@ -7,12 +7,15 @@ import type { NextRequest } from "next/server";
 const CODES = {
   0: "Success",
   1: "Invalid username",
+
   200: "Banned",
-  201: "Banned username",
-  202: "Banned discord",
+  201: "Not Whitelisted",
+  202: "Banned username",
+  203: "Banned discord",
 
   3: "Invalid timestamp",
   4: "Error",
+  5: "Banned"
 };
 
 export async function POST(req: NextRequest) {
@@ -46,8 +49,8 @@ export async function POST(req: NextRequest) {
     if (!isValid) {
       return Response.json({
         status: false,
-        reason: "Invalid username",
-        code: 1,
+        reason: "Not Whitelisted",
+        code: 201,
         data: {
           username: data.username,
         },
@@ -69,11 +72,22 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (user.status === "banned") {
+      return Response.json({
+        status: false,
+        reason: "Banned",
+        code: 5,
+        data: {
+          username: data.username,
+        },
+      });
+    }
+
     // Check if banned lists exist before using them
     if (env.BANNED_DISCORDS && user.discord in env.BANNED_DISCORDS) {
       return Response.json({
         status: false,
-        reason: "Banned discord",
+        reason: "",
         code: 201,
         data: {
           username: data.username,
@@ -84,7 +98,7 @@ export async function POST(req: NextRequest) {
     if (env.BANNED_MINECRAFT && user.minecraft in env.BANNED_MINECRAFT) {
       return Response.json({
         status: false,
-        reason: "Banned minecraft",
+        reason: "",
         code: 202,
         data: {
           username: data.username,
