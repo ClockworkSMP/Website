@@ -3,7 +3,6 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
-import { TRPCReactProvider } from "~/trpc/react";
 import { ConvexClientProvider } from "./convex";
 
 export const metadata: Metadata = {
@@ -24,7 +23,9 @@ export default function RootLayout({
     <html lang="en" className={`${geist.variable}`}>
       <body>
         <ConvexClientProvider>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+          {/*<TRPCReactProvider>*/}
+            {children}
+          {/*</TRPCReactProvider>*/}
         </ConvexClientProvider>
       </body>
     </html>
