@@ -45,7 +45,7 @@ export async function POST(req) {
     return;
   }
 
-  if (user.discord in env.banned_discords) {
+  if (user.discord in env.BANNED_DISCORDS) {
     Response.json({
       status: false,
       reason: "Invalid username",
@@ -57,7 +57,7 @@ export async function POST(req) {
     return
   }
 
-  if (user.minecraft in env.banned_minecraft) {
+  if (user.minecraft in env.BANNED_MINECRAFT) {
     Response.json({
       status: false,
       reason: "Invalid username",
