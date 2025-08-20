@@ -40,10 +40,10 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_CONVEX_URL: process.env.convex_url,
-    banned_discords: process.env.banned_discords,
-    banned_minecraft: process.env.banned_minecraft,
-    auth_token: process.env.auth_token,
+    NEXT_PUBLIC_CONVEX_URL: process.env.CONVEX_URL,
+    banned_discords: process.env.BANNED_URL,
+    banned_minecraft: process.env.BANNED_MINECRAFT,
+    auth_token: process.env.AUTH_TOKEN,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
