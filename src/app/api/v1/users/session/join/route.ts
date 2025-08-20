@@ -2,6 +2,7 @@ import { z } from "zod";
 import { api } from "../../../../../../../convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { env } from "~/env";
+import type { NextRequest } from "next/server";
 
 const CODES = {
   0: "Success",
@@ -14,12 +15,24 @@ const CODES = {
   4: "Error",
 };
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   const schema = z.object({
-    username: z.string(),
+    username: z.string().min(1, "Username cannot be empty"),
     timestamp: z.number(),
   });
   const data = schema.parse(await req.json());
+
+  // Additional validation to ensure username is not empty
+  if (!data.username || data.username.trim() === "") {
+    return Response.json({
+      status: false,
+      reason: "Invalid username",
+      code: 1,
+      data: {
+        username: data.username,
+      },
+    });
+  }
 
   if (
     data.username &&
