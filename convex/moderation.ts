@@ -7,7 +7,7 @@ export const banUser = mutation({
   args: {
     user: v.id("users"),
     mod: v.id("users"),
-    reason: v.union(v.string(), v.null()),
+    reason: v.optional(v.string()),
     timestamp: v.optional(v.number()),
     duration: v.optional(v.number()),
   },
@@ -27,7 +27,7 @@ export const kickUser = mutation({
   args: {
     user: v.id("users"),
     mod: v.id("users"),
-    reason: v.union(v.string(), v.null()),
+    reason: v.optional(v.string()),
     timestamp: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -46,7 +46,7 @@ export const timeoutUser = mutation({
   args: {
     user: v.id("users"),
     mod: v.id("users"),
-    reason: v.union(v.string(), v.null()),
+    reason: v.optional(v.string()),
     timestamp: v.optional(v.number()),
     duration: v.optional(v.number()),
   },
@@ -66,7 +66,7 @@ export const warnUser = mutation({
   args: {
     user: v.id("users"),
     mod: v.id("users"),
-    reason: v.union(v.string(), v.null()),
+    reason: v.optional(v.string()),
     timestamp: v.optional(v.number()),
     duration: v.optional(v.number()),
   },

@@ -1,4 +1,6 @@
-export async function GET(req) {
+import type { NextRequest } from "next/server";
+
+export async function GET(req: NextRequest) {
   return Response.json({
     status: true,
   });
@@ -7,5 +9,5 @@ export async function GET(req) {
 /*
 Ok: { status: true }
 
-Fail: { status: false, reason: string, method: ("throw" | "kick" | "ban" | "nuke")[] }
+Fail: { status: false, reason: string, method: ("throw" | "kick" | "ban" | "nuke" | "stop")[] }
 */

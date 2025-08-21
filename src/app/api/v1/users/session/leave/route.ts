@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { api } from "../../../../../../../convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
+import type { NextRequest } from "next/server";
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   const schema = z.object({
     username: z.string(),
     timestamp: z.number(),
   });
-  const data = schema.parse(req.json());
+  const data = schema.parse(await req.json());
 
   if (
     data.username &&
@@ -35,7 +36,7 @@ export async function POST(req) {
 
   await fetchMutation(api.sessions.endSession, {
     user: user._id,
-    joinedAt: data.timestamp,
+    leftAt: data.timestamp,
   });
   return Response.json({
     status: true,

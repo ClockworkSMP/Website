@@ -3,19 +3,24 @@ import { api } from "../../../../../../../convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { env } from "~/env";
 import type { NextRequest } from "next/server";
+import { configManager } from "~/server/config";
 
 const CODES = {
   0: "Success",
   1: "Invalid username",
 
   200: "Banned",
-  201: "Not Whitelisted",
+  201: "Not Authorized",
+  2011: "Not Whitelisted",
+  2012: "Maintenance Mode",
+  2013: "Duplicate IP",
+
   202: "Banned username",
   203: "Banned discord",
 
   3: "Invalid timestamp",
   4: "Error",
-  5: "Banned"
+  5: "Banned",
 };
 
 export async function POST(req: NextRequest) {
@@ -23,9 +28,17 @@ export async function POST(req: NextRequest) {
     const schema = z.object({
       username: z.string().min(1, "Username cannot be empty"),
       timestamp: z.number(),
+      ip: z.string(),
     });
-    const data = schema.parse(await req.json());
+    if (!configManager.activeWhitelist) {
+      return Response.json({
+        status: true,
+        code: 0
+      });
+    } 
 
+    const data = schema.parse(await req.json());
+  
     // Additional validation to ensure username is not empty
     if (!data.username || data.username.trim() === "") {
       return Response.json({
@@ -84,7 +97,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if banned lists exist before using them
-    if (env.BANNED_DISCORDS && user.discord in env.BANNED_DISCORDS) {
+    if (env.BANNED_DISCORDS && user.discord && user.discord in env.BANNED_DISCORDS) {
       return Response.json({
         status: false,
         reason: "",
@@ -106,16 +119,55 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (configManager.maintenanceMode) {
+      if (!(user.status in ["admin", "moderator"])) {
+        return Response.json({
+          status: false,
+          reason: "Maintenance mode",
+          code: 203,
+          data: {
+            username: data.username,
+          },
+        })
+      }
+    }
+
+    const duplicateIp = await fetchQuery(api.sessions.checkIp, {
+      ip: data.ip,
+      id: user._id,
+    });
+
+    if (duplicateIp) {
+      return Response.json({
+        status: false,
+        reason: "Duplicate IP",
+        code: 2013,
+        data: {
+          username: data.username,
+        },
+      });
+    }
+
     await fetchMutation(api.sessions.createSession, {
       user: user._id,
       joinedAt: data.timestamp,
+      ip: data.ip,
     });
 
     return Response.json({
       status: true,
+      code: 0
     });
   } catch (error) {
-    console.error("Error in join route:", error);
+    if (!(error instanceof Error)) {
+      return Response.json({
+        status: false,
+        reason: "Internal server error",
+        code: 4,
+        data: {},
+      }, { status: 500 });
+    }
+    console.error("Error in join route: ", error);
     return Response.json(
       {
         status: false,

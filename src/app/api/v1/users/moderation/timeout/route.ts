@@ -6,8 +6,8 @@ import type { NextRequest } from "next/server";
 
 const schema = z.object({
   user: z.string(),
-  reason: z.union([z.string(), z.null()]),
-  duration: z.number(),
+  reason: z.string().optional(),
+  duration: z.number().optional(),
   timestamp: z.number(),
   mod: z.string(),
 });
@@ -21,7 +21,7 @@ type Data = {
 };
 
 export async function POST(req: NextRequest) {
-  const data = schema.parse(await req.json() as () => Promise<Data>);
+  const data = schema.parse(await req.json());
 
   const user = await fetchQuery(api.users.queryUser, {
     minecraft: data.user,

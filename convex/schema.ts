@@ -21,7 +21,8 @@ export default defineSchema({
   })
     .index("discord", ["discord"])
     .index("minecraft", ["minecraft"])
-    .index("status", ["status"]),
+		.index("status", ["status"]),
+
   moderationLog: defineTable({
     user: v.id("users"),
     moderator: v.id("users"),
@@ -31,7 +32,7 @@ export default defineSchema({
       v.literal("timeout"),
       v.literal("warn"),
     ),
-    reason: v.union(v.string(), v.null()),
+    reason: v.optional(v.string()),
     timestamp: v.number(),
     expiresAt: v.optional(v.union(v.null(), v.number())),
     revokedAt: v.optional(v.number()),
@@ -47,7 +48,8 @@ export default defineSchema({
       "action",
       "revokedAt",
       "expiresAt",
-    ]),
+		]),
+
   messages: defineTable({
     from: v.id("users"),
     message: v.string(),
@@ -65,16 +67,21 @@ export default defineSchema({
     .index("moderation", ["moderation"])
     .index("timestamp", ["timestamp"])
     .index("loc", ["loc"])
-    .index("to", ["to"]),
+		.index("to", ["to"]),
+
   sessions: defineTable({
     user: v.id("users"),
     joinedAt: v.number(),
     leftAt: v.optional(v.number()),
+    ip: v.string(),
   })
     .index("user", ["user"])
     .index("joinedAt", ["joinedAt"])
     .index("leftAt", ["leftAt"])
-    .index("userAndLeft", ["user", "leftAt"]),
+    .index("ip", ["ip"])
+    .index("ipUser", ["ip", "user"])
+		.index("userAndLeft", ["user", "leftAt"]),
+
   whitelistAttempt: defineTable({
     discord: v.string(),
     minecraft: v.string(),
@@ -103,5 +110,5 @@ export default defineSchema({
     .index("discord", ["discord"])
     .index("status", ["status"])
     .index("reviewedBy", ["reviewedBy"])
-    .index("user", ["user"]),
+		.index("user", ["user"]),
 });

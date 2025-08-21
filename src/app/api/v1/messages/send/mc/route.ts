@@ -2,6 +2,7 @@ import { z } from "zod";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "../../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../../convex/_generated/dataModel";
+import type { NextRequest } from "next/server";
 
 const Codes = {
   0: "Success",
@@ -14,7 +15,7 @@ const Codes = {
   5: "Error",
 }
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   const schema = z.object({
     message: z.string(),
     fromUUID: z.string(),
@@ -22,7 +23,7 @@ export async function POST(req) {
     timestamp: z.number(),
   });
 
-  const data = schema.parse(req.body);
+  const data = schema.parse(req.json());
 
   if (
     data.fromUUID &&
