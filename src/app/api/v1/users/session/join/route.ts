@@ -55,10 +55,9 @@ export async function POST(req: NextRequest) {
 
     // Additional validation to ensure username is not empty
     if (!data.username || data.username.trim() === "") {
-      KickEvent.withReason("Invalid username").send(
-        server.serverIp,
-        server.apiKey,
-      );
+      await KickEvent
+        .withReason("Invalid username")
+        .send(server.serverIp, server.apiKey);
       return Response.json({
         status: false,
         reason: "Invalid username",
@@ -78,10 +77,9 @@ export async function POST(req: NextRequest) {
     console.log("isValid result:", isValid);
 
     if (!isValid) {
-      KickEvent.withReason("Not whitelisted").send(
-        server.serverIp,
-        server.apiKey,
-      );
+      await KickEvent
+        .withReason("Not whitelisted")
+        .send(server.serverIp, server.apiKey);
       return Response.json({
         status: false,
         reason: "Not Whitelisted",
@@ -97,10 +95,9 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      KickEvent.withReason("User not found").send(
-        server.serverIp,
-        server.apiKey,
-      );
+      await KickEvent
+        .withReason("User not found")
+        .send(server.serverIp, server.apiKey);
       return Response.json({
         status: false,
         reason: "User not found",
@@ -112,7 +109,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (user.status === "banned") {
-      KickEvent.withReason("You are banned").send(
+      await KickEvent.withReason("You are banned").send(
         server.serverIp,
         server.apiKey,
       );
@@ -132,7 +129,7 @@ export async function POST(req: NextRequest) {
       user.discord &&
       user.discord in env.BANNED_DISCORDS
     ) {
-      KickEvent.withReason("201").send(server.serverIp, server.apiKey);
+      await KickEvent.withReason("201").send(server.serverIp, server.apiKey);
 
       return Response.json({
         status: false,
@@ -155,8 +152,24 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const profile = await fetchQuery(api.users.getProfile, {
+      server: server._id,
+      id: user._id
+    })
+
+    if (!profile) {
+      return Response.json({
+        status: false,
+        reason: "User not found",
+        code: 4,
+        data: {
+          username: data.username,
+        },
+      });
+    }
+
     if (server.lockTo && !server.lockTo.includes(profile.status)) {
-        KickEvent.withReason("Currently in maintenance mode").send(
+        await KickEvent.withReason("Currently in maintenance mode").send(
           server.serverIp,
           server.apiKey,
         );
@@ -177,10 +190,9 @@ export async function POST(req: NextRequest) {
     });
 
     if (duplicateIp) {
-      KickEvent.withReason("Duplicate IPs").send(
-        server.serverIp,
-        server.apiKey,
-      );
+      await KickEvent
+        .withReason("Duplicate IPs")
+        .send(server.serverIp, server.apiKey);
       return Response.json({
         status: false,
         reason: "Duplicate IP",
@@ -203,10 +215,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     if (!(error instanceof Error)) {
-      KickEvent.withReason("Internal server error").send(
-        server.serverIp,
-        server.apiKey,
-      );
+      await KickEvent
+        .withReason("Internal server error")
+        .send(server.serverIp, server.apiKey);
       return Response.json(
         {
           status: false,
@@ -218,10 +229,9 @@ export async function POST(req: NextRequest) {
       );
     }
     console.error("Error in join route: ", error);
-    KickEvent.withReason("Internal server error").send(
-      server.serverIp,
-      server.apiKey,
-    );
+    await KickEvent
+      .withReason("Internal server error")
+      .send(server.serverIp, server.apiKey);
     return Response.json(
       {
         status: false,
