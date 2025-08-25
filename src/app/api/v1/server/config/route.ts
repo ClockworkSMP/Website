@@ -1,13 +1,28 @@
 import type { NextRequest } from "next/server";
+import { auth } from "~/server/auth";
 
 export async function GET(req: NextRequest) {
-  const server = await auth(req);
-  if (!server) {
-    return Response.json({
-      status: false,
-    }, {
-      status: 401,
-    });
+  try {
+    const server = await auth(req);
+    if (!server) {
+      return Response.json({
+        status: false,
+      }, {
+        status: 401,
+      });
+    }
+  } catch (error) {
+    console.error("Error in config route: ", error);
+    return Response.json(
+      {
+        status: false,
+        reason: "Internal server error",
+        code: 4,
+        data: {
+          error: error,
+        },
+      },
+    );
   }
 
   return Response.json({

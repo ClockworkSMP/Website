@@ -1,13 +1,10 @@
-import type { JSONValue } from "node_modules/superjson/dist/types";
-
 type level = "overworld" | "nether" | "end";
-
 
 export class Event {
   private _id: string;
-  private _data: Record<string, JSONValue>;
+  private _data: Record<string, any>;
 
-  constructor(data: Record<string, JSONValue> = {}) {
+  constructor(data: Record<string, any> = {}) {
     this._id = Math.random().toString(36).substring(2, 15);
     this._data = data;
   }
