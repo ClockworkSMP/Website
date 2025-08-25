@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import type { Doc, Id } from "../../../../../../../convex/_generated/dataModel";
-import { api } from "convex/_generated/api";
+import { api } from "../../../../../../../convex/_generated/api";
 import type { NextRequest } from "next/server";
 import { auth } from "~/server/auth";
 import { KickEvent } from "~/server/client";
