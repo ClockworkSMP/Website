@@ -148,7 +148,9 @@ export default defineSchema({
     whitelistChannel: v.string(),
     logChannel: v.string(),
     botToken: v.string(),
-    serverIp: v.string(),
+    serverIp: v.optional(v.string()),
+    mcServer: v.optional(v.string()),
+    lockTo: v.optional(v.array(v.string())),
 
     disableElytra: v.array(
       v.union(v.literal("end"), v.literal("overworld"), v.literal("nether")),

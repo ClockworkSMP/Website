@@ -3,7 +3,6 @@ import { api } from "../../../../../../../convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { env } from "~/env";
 import type { NextRequest } from "next/server";
-import { configManager } from "~/server/config";
 import { KickEvent } from "~/server/client";
 import { auth } from "~/server/auth";
 
@@ -45,7 +44,7 @@ export async function POST(req: NextRequest) {
       timestamp: z.number(),
       ip: z.string(),
     });
-    if (!configManager.activeWhitelist) {
+    if (!server.activeWhitelist) {
       return Response.json({
         status: true,
         code: 0,
@@ -156,12 +155,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (configManager.maintenanceMode) {
-      if (!(user.status in ["admin", "moderator"])) {
-              KickEvent.withReason("Currently in maintenance mode").send(
-                server.serverIp,
-                server.apiKey,
-              );
+    if (server.lockTo && !server.lockTo.includes(profile.status)) {
+        KickEvent.withReason("Currently in maintenance mode").send(
+          server.serverIp,
+          server.apiKey,
+        );
 
         return Response.json({
           status: false,
@@ -171,7 +169,6 @@ export async function POST(req: NextRequest) {
             username: data.username,
           },
         });
-      }
     }
 
     const duplicateIp = await fetchQuery(api.sessions.checkIp, {
