@@ -5,7 +5,7 @@ export const approveWhitelist = mutation({
   args: {
     whitelistApp: v.id("whitelistAttempt"),
     whitelistedAt: v.optional(v.number()),
-    reviewedBy: v.id("users"),
+    reviewedBy: v.id("profile"),
   },
   handler: async (ctx, args) => {
     const whitelistAt = args.whitelistedAt ?? Date.now();
@@ -32,9 +32,8 @@ export const approveWhitelist = mutation({
 
 export const denyWhitelist = mutation({
   args: {
-    user: v.id("users"),
     whitelistApp: v.id("whitelistAttempt"),
-    reviewedBy: v.id("users"),
+    reviewedBy: v.id("profile"),
     reapply: v.number(),
     reason: v.string(),
     reviewedAt: v.optional(v.number()),
@@ -52,12 +51,16 @@ export const denyWhitelist = mutation({
 
 export const queryUserWhitelists = query({
   args: {
-    user: v.id("users"),
+    user: v.id("profile"),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("whitelistAttempt")
-      .withIndex("user", (q) => q.eq("user", args.user)).collect();
+      .withIndex("user", (q) =>
+        q.eq("server", args.server).eq("user", args.user),
+      )
+      .collect();
   },
 });
 
@@ -72,78 +75,24 @@ export const queryWhitelist = query({
 
 export const createWhitelist = mutation({
   args: {
-    user: v.id("users"),
+    server: v.id("server"),
+    user: v.id("profile"),
     createdAt: v.optional(v.number()),
-    age: v.number(),
-    found: v.string(),
-    interests: v.string(),
-    otherSMP: v.boolean(),
-    create: v.boolean(),
-    goodAt: v.string(),
-    town: v.union(v.literal("myOwn"), v.literal("other"), v.literal("none")),
-    friends: v.id("users"),
-    otherInfo: v.string(),
+
+    data: v.record(v.string(), v.any()),
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.user);
     if (!user) {
       return;
-		}
-		if (!user.discord) {
-			return
-		}
+    }
     await ctx.db.insert("whitelistAttempt", {
-      discord: user.discord,
-      minecraft: user.minecraft,
+      server: args.server,
       user: args.user,
       status: "pending",
       createdAt: args.createdAt ?? Date.now(),
-      age: args.age,
-      found: args.found,
-      interests: args.interests,
-      otherSMP: args.otherSMP,
-      create: args.create,
-      goodAt: args.goodAt,
-      town: args.town,
-      friends: args.friends,
-      otherInfo: args.otherInfo,
+
+      data: args.data,
     });
-  },
-});
-
-export const createUserWhitelist = mutation({
-  args: {
-    discord: v.string(),
-    minecraft: v.string(),
-    createdAt: v.optional(v.number()),
-    age: v.number(),
-    found: v.string(),
-    interests: v.string(),
-    otherSMP: v.boolean(),
-    create: v.boolean(),
-    goodAt: v.string(),
-    town: v.union(v.literal("myOwn"), v.literal("other"), v.literal("none")),
-    friends: v.id("users"),
-    otherInfo: v.string(),
-    registeredAt: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const queryUser = await ctx.db
-      .query("users")
-      .withIndex("discord", (q) => q.eq("discord", args.discord))
-      .unique();
-
-    let user;
-
-    if (!queryUser) {
-      user = await ctx.db.insert("users", {
-        discord: args.discord,
-        minecraft: args.minecraft,
-        status: "registered",
-        registeredAt: args.registeredAt ?? Date.now(),
-      });
-    } else {
-      user = queryUser;
-    }
   },
 });

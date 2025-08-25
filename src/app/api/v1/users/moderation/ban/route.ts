@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
-import type { Id } from "../../../../../../../convex/_generated/dataModel";
-import { api } from "../../../../../../../convex/_generated/api";
+import type { Doc, Id } from "../../../../../../../convex/_generated/dataModel";
+import { api } from "convex/_generated/api";
 import type { NextRequest } from "next/server";
+import { auth } from "~/server/auth";
+import { KickEvent } from "~/server/client";
 
 const schema = z.object({
   user: z.string(),
@@ -13,85 +15,99 @@ const schema = z.object({
 });
 
 type Data = {
-  user: Id<"users">;
+  user: string;
   reason?: string;
   duration?: number;
   timestamp: number;
-  mod: Id<"users">;
+  mod: string;
 };
 
 export async function POST(req: NextRequest) {
+  const server = await auth(req);
+  if (!server) {
+    return Response.json(
+      {
+        status: false,
+      },
+      {
+        status: 401,
+      },
+    );
+  }
+
   const data = schema.parse(await req.json());
 
-  const queryUser = await fetchQuery(api.users.queryUser, {
-    minecraft: data.user,
-  });
-
-  let user;
-  if (!queryUser) {
-    const newUser = await fetchMutation(api.users.registerUser, {
+  const [user, mod] = await Promise.all([
+    fetchQuery(api.users.queryUser, {
       minecraft: data.user,
-      discord: null,
-    })
+    }),
+    fetchQuery(api.users.queryUser, {
+      minecraft: data.mod,
+    }),
+  ]);
 
-    const fetchedUser = await fetchQuery(api.users.queryUser, {
-      id: newUser,
-    });
-
-    if (!fetchedUser) {
-      return Response.json({
-        status: false,
-        reason: "Error",
-        code: 5,
-        data: {
-          user: data.user,
-        },
-      });
-    }
-
-    user = fetchedUser;
-  }
-  else {
-    user = queryUser;
-  }
-
-  const mod = await fetchQuery(api.users.queryUser, {
-    minecraft: data.mod,
-  });
-
-  if (!mod) {
+  if (!user || !mod) {
     return Response.json({
       status: false,
       reason: "Error",
       code: 5,
       data: {
-        user: data.user,
+        user: user ? data.user : data.mod,
       },
     });
   }
 
-  if (!(mod.status in ["admin", "moderator"])) {
+  const [userProfile, modProfile] = await Promise.all([
+    fetchQuery(api.users.getProfile, {
+      id: user._id,
+      server: server._id,
+    }),
+    fetchQuery(api.users.getProfile, {
+      id: mod._id,
+      server: server._id,
+    }),
+  ]);
+
+  if (!userProfile || !modProfile) {
+    return Response.json({
+      status: false,
+      reason: "Error",
+      code: 5,
+      data: {
+        user: userProfile ? data.user : data.mod,
+      },
+    });
+  }
+
+  if (!(modProfile.status in ["admin", "moderator"])) {
     return Response.json({
       status: false,
       reason: "Unauthorized",
       code: 4,
       data: {
-        user: user._id,
-        mod: mod._id,
-        rank: mod.status,
+        mod: modProfile._id,
+        rank: modProfile.status,
       },
     });
   }
 
   await fetchMutation(api.moderation.banUser, {
-    user: user._id, 
+    user: userProfile._id,
     reason: data.reason,
     duration: data.duration,
     timestamp: data.timestamp,
-    mod: mod._id,
+    mod: modProfile._id,
+    server: server._id,
   });
 
-  return Response.json({
-    status: true,
-  });
+  if (data.reason) {
+    KickEvent.withReason(user.minecraft, data.reason).send(
+      server.serverIp,
+      server.apiKey,
+    );
+  } else {
+    KickEvent.player(user.minecraft).send(server.serverIp, server.apiKey);
+  }
+
+  return Response.json({ status: true });
 }

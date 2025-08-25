@@ -5,14 +5,16 @@ const MAX_WARNS = 3;
 
 export const banUser = mutation({
   args: {
-    user: v.id("users"),
-    mod: v.id("users"),
+    user: v.id("profile"),
+    mod: v.id("profile"),
     reason: v.optional(v.string()),
     timestamp: v.optional(v.number()),
     duration: v.optional(v.number()),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("moderationLog", {
+      server: args.server,
       user: args.user,
       moderator: args.mod,
       action: "ban",
@@ -25,13 +27,15 @@ export const banUser = mutation({
 
 export const kickUser = mutation({
   args: {
-    user: v.id("users"),
-    mod: v.id("users"),
+    user: v.id("profile"),
+    mod: v.id("profile"),
     reason: v.optional(v.string()),
     timestamp: v.optional(v.number()),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("moderationLog", {
+      server: args.server,
       user: args.user,
       moderator: args.mod,
       action: "kick",
@@ -44,14 +48,16 @@ export const kickUser = mutation({
 
 export const timeoutUser = mutation({
   args: {
-    user: v.id("users"),
-    mod: v.id("users"),
+    server: v.id("server"),
+    user: v.id("profile"),
+    mod: v.id("profile"),
     reason: v.optional(v.string()),
     timestamp: v.optional(v.number()),
     duration: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("moderationLog", {
+      server: args.server,
       user: args.user,
       moderator: args.mod,
       action: "timeout",
@@ -64,14 +70,16 @@ export const timeoutUser = mutation({
 
 export const warnUser = mutation({
   args: {
-    user: v.id("users"),
-    mod: v.id("users"),
+    server: v.id("server"),
+    user: v.id("profile"),
+    mod: v.id("profile"),
     reason: v.optional(v.string()),
     timestamp: v.optional(v.number()),
     duration: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("moderationLog", {
+      server: args.server,
       user: args.user,
       moderator: args.mod,
       action: "warn",
@@ -84,13 +92,15 @@ export const warnUser = mutation({
 
 export const getUserWarns = query({
   args: {
-    user: v.id("users"),
+    user: v.id("profile"),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("moderationLog")
       .withIndex("userActionRevokedExpires", (q) =>
         q
+          .eq("server", args.server)
           .eq("user", args.user)
           .eq("action", "warn")
           .eq("revokedAt", undefined)
@@ -103,47 +113,113 @@ export const getUserWarns = query({
 export const fetchLatest = query({
   args: {
     timestamp: v.number(),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("moderationLog")
-      .withIndex("timestamp", (q) => q.gte("timestamp", args.timestamp))
+      .withIndex("timestamp", (q) =>
+        q.eq("server", args.server).gte("timestamp", args.timestamp),
+      )
       .collect();
   },
 });
 
 export const isTimedout = query({
   args: {
-    user: v.id("users"),
+    user: v.id("profile"),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     const timedout = await ctx.db
       .query("moderationLog")
-      .withIndex("userActionRevokedExpires", (q) => 
-        q.eq("user", args.user)
+      .withIndex("userActionRevokedExpires", (q) =>
+        q
+          .eq("server", args.server)
+          .eq("user", args.user)
           .eq("action", "timeout")
           .eq("revokedAt", undefined)
-          .lte("expiresAt", Date.now())
+          .lte("expiresAt", Date.now()),
       )
-			.unique()
-		
-		if (timedout) {
-			return true;
-		}
+      .unique();
 
-		const warns = await ctx.db
-			.query("moderationLog")
-			.withIndex("userActionRevokedExpires", (q) =>
-				q.eq("user", args.user)
-					.eq("action", "warn")
-					.eq("revokedAt", undefined)
-					.lte("expiresAt", Date.now())
-			).collect();
+    if (timedout) {
+      return true;
+    }
 
-		if (warns.length > MAX_WARNS) {
-			return true;
-		}
+    const warns = await ctx.db
+      .query("moderationLog")
+      .withIndex("userActionRevokedExpires", (q) =>
+        q
+          .eq("server", args.server)
+          .eq("user", args.user)
+          .eq("action", "warn")
+          .eq("revokedAt", undefined)
+          .lte("expiresAt", Date.now()),
+      )
+      .collect();
 
-		return false;
+    if (warns.length > MAX_WARNS) {
+      return true;
+    }
+
+    return false;
+  },
+});
+
+export const createTpa = mutation({
+  args: {
+    sever: v.id("server"),
+    from: v.id("profile"),
+    to: v.id("profile"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("tpa", {
+      server: args.sever,
+      from: args.from,
+      to: args.to,
+      status: "pending",
+    });
+  },
+});
+
+export const acceptTpa = mutation({
+  args: {
+    id: v.id("tpa"),
+    timestamp: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      status: "accepted",
+      chosenAt: args.timestamp,
+    });
+  },
+});
+
+export const denyTpa = mutation({
+  args: {
+    id: v.id("tpa"),
+    timestamp: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      status: "denied",
+      chosenAt: args.timestamp,
+    });
+  },
+});
+
+export const getUserTpa = mutation({
+  args: {
+    id: v.id("profile"),
+    server: v.id("server"),
+  },
+  handler: async (ctx, args) => {
+    return ctx.db
+      .query("tpa")
+      .withIndex("userStatus", (q) =>
+        q.eq("server", args.server).eq("to", args.id),
+      )
+      .first();
   },
 });

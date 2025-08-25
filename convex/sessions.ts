@@ -3,29 +3,47 @@ import { v } from "convex/values";
 
 export const createSession = mutation({
   args: {
-    user: v.id("users"),
-		joinedAt: v.optional(v.number()),
-		ip: v.string(),
+    user: v.id("profile"),
+    joinedAt: v.optional(v.number()),
+    ip: v.string(),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("sessions", {
-      user: args.user,
-			joinedAt: args.joinedAt ?? Date.now(),
-			ip: args.ip,
-    });
+    const profile = await ctx.db.get(args.user);
+    if (!profile) {
+      return;
+    }
+    const user = await ctx.db.get(profile.user);
+    if (!user) {
+      return;
+    }
+await Promise.all([ctx.db.insert("sessions", {
+  server: args.server,
+  user: args.user,
+  joinedAt: args.joinedAt ?? Date.now(),
+  ip: args.ip,
+}), ctx.db.patch(profile.user, {
+  ips: user.ips.concat(args.ip),
+})]);
+
+    return 
   },
 });
 
 export const endSession = mutation({
   args: {
-    user: v.id("users"),
+    user: v.id("profile"),
     leftAt: v.optional(v.number()),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     const session = await ctx.db
       .query("sessions")
       .withIndex("userAndLeft", (q) =>
-        q.eq("user", args.user).eq("leftAt", args.leftAt),
+        q
+          .eq("server", args.server)
+          .eq("user", args.user)
+          .eq("leftAt", args.leftAt),
       )
       .unique();
 
@@ -41,23 +59,30 @@ export const endSession = mutation({
 
 export const querySessions = query({
   args: {
-    user: v.id("users"),
+    user: v.id("profile"),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("sessions")
-      .withIndex("user", (q) => q.eq("user", args.user)).collect();
+      .withIndex("user", (q) =>
+        q.eq("server", args.server).eq("user", args.user),
+      )
+      .collect();
   },
 });
 
 export const getLastSession = query({
   args: {
-    user: v.id("users"),
+    user: v.id("profile"),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("sessions")
-      .withIndex("userAndLeft", (q) => q.eq("user", args.user))
+      .withIndex("userAndLeft", (q) =>
+        q.eq("server", args.server).eq("user", args.user),
+      )
       .order("desc")
       .first();
   },
@@ -66,14 +91,15 @@ export const getLastSession = query({
 export const checkIp = query({
   args: {
     ip: v.string(),
-    id: v.id("users"),
+    id: v.id("profile"),
+    server: v.id("server"),
   },
   handler: async (ctx, args) => {
     return (
       (
         await ctx.db
           .query("sessions")
-          .withIndex("ip", (q) => q.eq("ip", args.ip))
+          .withIndex("ip", (q) => q.eq("server", args.server).eq("ip", args.ip))
           .filter((q) => q.not(q.eq(q.field("user"), args.id)))
           .collect()
       ).length > 0

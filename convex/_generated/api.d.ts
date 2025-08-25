@@ -13,8 +13,10 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as config from "../config.js";
 import type * as messages from "../messages.js";
 import type * as moderation from "../moderation.js";
+import type * as server from "../server.js";
 import type * as sessions from "../sessions.js";
 import type * as users from "../users.js";
 import type * as whitelist from "../whitelist.js";
@@ -28,8 +30,10 @@ import type * as whitelist from "../whitelist.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  config: typeof config;
   messages: typeof messages;
   moderation: typeof moderation;
+  server: typeof server;
   sessions: typeof sessions;
   users: typeof users;
   whitelist: typeof whitelist;

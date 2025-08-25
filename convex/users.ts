@@ -14,14 +14,14 @@ export const queryUser = query({
     if (args.discord) {
       return await ctx.db
         .query("users")
-        .withIndex("discord", (q) => q.eq("discord", args.discord as string))
+        .withIndex("discord", (q) => q.eq("discord", args.discord!))
         .unique();
     }
     if (args.minecraft) {
       return await ctx.db
         .query("users")
         .withIndex("minecraft", (q) =>
-          q.eq("minecraft", args.minecraft as string),
+          q.eq("minecraft", args.minecraft!),
         )
         .unique();
     }
@@ -32,15 +32,53 @@ export const registerUser = mutation({
   args: {
     discord: v.union(v.string(), v.null()),
     minecraft: v.string(),
-    registeredAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("users", {
       discord: args.discord,
       minecraft: args.minecraft,
-      registeredAt: args.registeredAt ?? Date.now(),
-      status: "registered",
+      ips: [],
     });
+  },
+});
+
+export const createProfile = mutation({
+  args: {
+    user: v.id("users"),
+    server: v.id("server"),
+    status: v.union(
+      v.literal("banned"),
+      v.literal("registered"),
+      v.literal("pending"),
+      v.literal("whitelisted"),
+      v.literal("helper"),
+      v.literal("moderator"),
+      v.literal("admin"),
+    ),
+
+    registeredAt: v.optional(v.number()),
+    whitelistedAt: v.optional(v.number()),
+    bannedAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("profile", {
+      server: args.server,
+      user: args.user,
+      status: args.status,
+      registeredAt: args.registeredAt ?? Date.now(),
+      whitelistedAt: args.whitelistedAt ?? Date.now(),
+      bannedAt: args.bannedAt ?? Date.now(),
+    });
+  },
+});
+
+export const getProfile = query({
+  args: {
+    id: v.id("users"),
+    server: v.id("server"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.query("profile").withIndex("serverUser", (q) => q.eq("server", args.server).eq("user", args.id)).first();
   },
 });
 
@@ -64,7 +102,7 @@ export const isValidUser = query({
       const users = await ctx.db
         .query("users")
         .withIndex("minecraft", (q) =>
-          q.eq("minecraft", args.minecraft as string),
+          q.eq("minecraft", args.minecraft!),
         )
         .collect();
       return users.length > 0;
@@ -72,7 +110,7 @@ export const isValidUser = query({
     if (args.discord && args.discord.trim() !== "") {
       const users = await ctx.db
         .query("users")
-        .withIndex("discord", (q) => q.eq("discord", args.discord as string))
+        .withIndex("discord", (q) => q.eq("discord", args.discord!))
         .collect();
       return users.length > 0;
     }
