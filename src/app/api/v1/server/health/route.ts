@@ -1,4 +1,4 @@
-import { api } from "convex/_generated/api";
+import { api } from "../../../../../../convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import type { NextRequest } from "next/server";
 import { z } from "zod/v4";

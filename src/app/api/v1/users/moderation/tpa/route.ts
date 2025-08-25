@@ -1,4 +1,4 @@
-import { api } from "convex/_generated/api";
+import { api } from "../../../../../../../convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
     }
     if (respData.data.type == "accept") {
       await fetchMutation(api.moderation.acceptTpa, {
-        user: 
-      });
+        user: user._id 
+      })
     }
   } else {
     return Response.json({
