@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
 
   try {
     if (!server) {
+      
       return Response.json(
         {
           status: false,
@@ -44,20 +45,15 @@ export async function POST(req: NextRequest) {
       timestamp: z.number(),
       ip: z.string(),
     });
-    if (!server.activeWhitelist) {
-      return Response.json({
-        status: true,
-        code: 0,
-      });
-    }
 
     const data = schema.parse(await req.json());
 
     // Additional validation to ensure username is not empty
     if (!data.username || data.username.trim() === "") {
-      await KickEvent
-        .withReason("Invalid username")
-        .send(server.serverIp, server.apiKey);
+      await KickEvent.withReason("Invalid username").send(
+        server.serverIp,
+        server.apiKey,
+      );
       return Response.json({
         status: false,
         reason: "Invalid username",
@@ -77,9 +73,10 @@ export async function POST(req: NextRequest) {
     console.log("isValid result:", isValid);
 
     if (!isValid) {
-      await KickEvent
-        .withReason("Not whitelisted")
-        .send(server.serverIp, server.apiKey);
+      await KickEvent.withReason("Not whitelisted").send(
+        server.serverIp,
+        server.apiKey,
+      );
       return Response.json({
         status: false,
         reason: "Not Whitelisted",
@@ -95,9 +92,10 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      await KickEvent
-        .withReason("User not found")
-        .send(server.serverIp, server.apiKey);
+      await KickEvent.withReason("User not found").send(
+        server.serverIp,
+        server.apiKey,
+      );
       return Response.json({
         status: false,
         reason: "User not found",
@@ -108,7 +106,27 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (user.status === "banned") {
+    const profile = await fetchQuery(api.users.getProfile, {
+      server: server._id,
+      id: user._id,
+    });
+
+    if (!profile) {
+      await KickEvent.withReason("User not found").send(
+        server.serverIp,
+        server.apiKey,
+      );
+      return Response.json({
+        status: false,
+        reason: "User not found",
+        code: 4,
+        data: {
+          username: data.username,
+        },
+      });
+    }
+
+    if (profile.status === "banned") {
       await KickEvent.withReason("You are banned").send(
         server.serverIp,
         server.apiKey,
@@ -122,6 +140,49 @@ export async function POST(req: NextRequest) {
         },
       });
     }
+
+    if (server.lockTo && !server.lockTo.includes(profile.status)) {
+      await KickEvent.withReason("Currently in maintenance mode").send(
+        server.serverIp,
+        server.apiKey,
+      );
+
+      return Response.json({
+        status: false,
+        reason: "Maintenance mode",
+        code: 203,
+        data: {
+          username: data.username,
+        },
+      });
+    }
+
+    const duplicateIp = await fetchQuery(api.sessions.checkIp, {
+      ip: data.ip,
+      server: server._id,
+      id: profile._id,
+    });
+
+    if (duplicateIp) {
+      await KickEvent.withReason("Duplicate IPs").send(
+        server.serverIp,
+        server.apiKey,
+      );
+      return Response.json({
+        status: false,
+        reason: "Duplicate IP",
+        code: 2013,
+        data: {
+          username: data.username,
+        },
+      });
+    }
+
+    await fetchMutation(api.sessions.createSession, {
+      user: user._id,
+      joinedAt: data.timestamp,
+      ip: data.ip,
+    });
 
     // Check if banned lists exist before using them
     if (
@@ -142,6 +203,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (env.BANNED_MINECRAFT && user.minecraft in env.BANNED_MINECRAFT) {
+      await KickEvent.withReason("201").send(
+        server.serverIp,
+        server.apiKey,
+      );
       return Response.json({
         status: false,
         reason: "",
@@ -152,72 +217,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const profile = await fetchQuery(api.users.getProfile, {
-      server: server._id,
-      id: user._id
-    })
-
-    if (!profile) {
-      return Response.json({
-        status: false,
-        reason: "User not found",
-        code: 4,
-        data: {
-          username: data.username,
-        },
-      });
-    }
-
-    if (server.lockTo && !server.lockTo.includes(profile.status)) {
-        await KickEvent.withReason("Currently in maintenance mode").send(
-          server.serverIp,
-          server.apiKey,
-        );
-
-        return Response.json({
-          status: false,
-          reason: "Maintenance mode",
-          code: 203,
-          data: {
-            username: data.username,
-          },
-        });
-    }
-
-    const duplicateIp = await fetchQuery(api.sessions.checkIp, {
-      ip: data.ip,
-      id: user._id,
-    });
-
-    if (duplicateIp) {
-      await KickEvent
-        .withReason("Duplicate IPs")
-        .send(server.serverIp, server.apiKey);
-      return Response.json({
-        status: false,
-        reason: "Duplicate IP",
-        code: 2013,
-        data: {
-          username: data.username,
-        },
-      });
-    }
-
-    await fetchMutation(api.sessions.createSession, {
-      user: user._id,
-      joinedAt: data.timestamp,
-      ip: data.ip,
-    });
-
     return Response.json({
       status: true,
       code: 0,
     });
   } catch (error) {
     if (!(error instanceof Error)) {
-      await KickEvent
-        .withReason("Internal server error")
-        .send(server.serverIp, server.apiKey);
       return Response.json(
         {
           status: false,
@@ -229,9 +234,7 @@ export async function POST(req: NextRequest) {
       );
     }
     console.error("Error in join route: ", error);
-    await KickEvent
-      .withReason("Internal server error")
-      .send(server.serverIp, server.apiKey);
+
     return Response.json(
       {
         status: false,
