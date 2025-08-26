@@ -20,9 +20,7 @@ export const queryUser = query({
     if (args.minecraft) {
       return await ctx.db
         .query("users")
-        .withIndex("minecraft", (q) =>
-          q.eq("minecraft", args.minecraft!),
-        )
+        .withIndex("minecraft", (q) => q.eq("minecraft", args.minecraft))
         .unique();
     }
   },
@@ -78,7 +76,12 @@ export const getProfile = query({
     server: v.id("server"),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.query("profile").withIndex("serverUser", (q) => q.eq("server", args.server).eq("user", args.id)).first();
+    return await ctx.db
+      .query("profile")
+      .withIndex("serverUser", (q) =>
+        q.eq("server", args.server).eq("user", args.id),
+      )
+      .first();
   },
 });
 
@@ -101,9 +104,7 @@ export const isValidUser = query({
     if (args.minecraft && args.minecraft.trim() !== "") {
       const users = await ctx.db
         .query("users")
-        .withIndex("minecraft", (q) =>
-          q.eq("minecraft", args.minecraft!),
-        )
+        .withIndex("minecraft", (q) => q.eq("minecraft", args.minecraft))
         .collect();
       return users.length > 0;
     }
@@ -117,5 +118,29 @@ export const isValidUser = query({
 
     // If we get here, the arguments were provided but invalid (empty strings)
     return false;
+  },
+});
+
+export const linkMinecraftUser = mutation({
+  args: {
+    id: v.id("users"),
+    minecraft: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      minecraft: args.minecraft,
+    });
+  },
+});
+
+export const linkDiscordUser = mutation({
+  args: {
+    id: v.id("users"),
+    discord: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      discord: args.discord,
+    });
   },
 });

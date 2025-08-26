@@ -5,7 +5,8 @@ export default defineSchema({
   users: defineTable({
     ips: v.array(v.string()),
     discord: v.union(v.string(), v.null()),
-    minecraft: v.string(),
+    minecraft: v.optional(v.string()),
+    linkedAt: v.optional(v.number()),
   })
     .index("discord", ["discord"])
     .index("minecraft", ["minecraft"]),

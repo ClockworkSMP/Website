@@ -66,6 +66,21 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (!user.minecraft) {
+      await KickEvent.withReason(data.username, "User not created").send(
+        server.serverIp,
+        server.apiKey,
+      );
+      return Response.json({
+        status: false,
+        reason: "User not found",
+        code: 4,
+        data: {
+          username: data.username,
+        },
+      });
+    }
+
     const profile = await fetchQuery(api.users.getProfile, {
       server: server._id,
       id: user._id,
@@ -166,7 +181,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (env.BANNED_MINECRAFT && user.minecraft in env.BANNED_MINECRAFT) {
+    if (env.BANNED_MINECRAFT && user.minecraft && user.minecraft in env.BANNED_MINECRAFT) {
       await KickEvent.withReason(user.minecraft, "201").send(
         server.serverIp,
         server.apiKey,
