@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
 
   try {
     if (!server) {
-      
       return Response.json(
         {
           status: false,
@@ -47,45 +46,6 @@ export async function POST(req: NextRequest) {
     });
 
     const data = schema.parse(await req.json());
-
-    // Additional validation to ensure username is not empty
-    if (!data.username || data.username.trim() === "") {
-      await KickEvent.withReason("Invalid username").send(
-        server.serverIp,
-        server.apiKey,
-      );
-      return Response.json({
-        status: false,
-        reason: "Invalid username",
-        code: 1,
-        data: {
-          username: data.username,
-        },
-      });
-    }
-
-    console.log("Checking if user is valid:", data.username);
-
-    const isValid = await fetchQuery(api.users.isValidUser, {
-      minecraft: data.username,
-    });
-
-    console.log("isValid result:", isValid);
-
-    if (!isValid) {
-      await KickEvent.withReason("Not whitelisted").send(
-        server.serverIp,
-        server.apiKey,
-      );
-      return Response.json({
-        status: false,
-        reason: "Not Whitelisted",
-        code: 201,
-        data: {
-          username: data.username,
-        },
-      });
-    }
 
     const user = await fetchQuery(api.users.queryUser, {
       minecraft: data.username,
@@ -127,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (profile.status === "banned") {
-      await KickEvent.withReason("You are banned").send(
+      await KickEvent.withReason(user.minecraft, "You are banned").send(
         server.serverIp,
         server.apiKey,
       );
@@ -142,7 +102,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (server.lockTo && !server.lockTo.includes(profile.status)) {
-      await KickEvent.withReason("Currently in maintenance mode").send(
+      await KickEvent.withReason(user.minecraft, "Currently in maintenance mode").send(
         server.serverIp,
         server.apiKey,
       );
@@ -164,7 +124,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (duplicateIp) {
-      await KickEvent.withReason("Duplicate IPs").send(
+      await KickEvent.withReason(user.minecraft, "Duplicate IPs").send(
         server.serverIp,
         server.apiKey,
       );
@@ -191,7 +151,10 @@ export async function POST(req: NextRequest) {
       user.discord &&
       user.discord in env.BANNED_DISCORDS
     ) {
-      await KickEvent.withReason("201").send(server.serverIp, server.apiKey);
+      await KickEvent.withReason(user.minecraft, "201").send(
+        server.serverIp,
+        server.apiKey,
+      );
 
       return Response.json({
         status: false,
@@ -204,7 +167,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (env.BANNED_MINECRAFT && user.minecraft in env.BANNED_MINECRAFT) {
-      await KickEvent.withReason("201").send(
+      await KickEvent.withReason(user.minecraft, "201").send(
         server.serverIp,
         server.apiKey,
       );
