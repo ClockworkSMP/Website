@@ -236,3 +236,35 @@ export class WarnEvent extends Event {
     });
   }
 }
+
+export class OpEvent extends Event {
+  static op(player: string) {
+    return new OpEvent({
+      player,
+    });
+  }
+}
+
+export class DeOpEvent extends Event {
+  static deop(player: string) {
+    return new DeopEvent({
+      player,
+    });
+  }
+}
+
+export class HealEvent extends Event {
+  static heal(player: string) {
+    return new HealEvent({
+      player,
+    });
+  }
+}
+
+export class FeedEvent extends Event {
+  static feed(player: string) {
+    return new FeedEvent({
+      player,
+    });
+  }
+}
