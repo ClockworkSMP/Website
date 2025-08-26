@@ -22,7 +22,7 @@ export class Event {
   }
 
   async send(url: string, apiKey: string) {
-    await fetch(url, {
+    await fetch(`//${url}`, {
       method: "POST",
       body: JSON.stringify({
         type: this.name,
