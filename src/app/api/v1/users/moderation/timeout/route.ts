@@ -3,7 +3,8 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import type { Id } from "../../../../../../../convex/_generated/dataModel";
 import { api } from "../../../../../../../convex/_generated/api";
 import type { NextRequest } from "next/server";
-import { MessageEvent, TimeoutEvent } from "~/server/client";
+import { MessageEvent } from "~/server/client";
+import { auth } from "~/server/auth";
 
 const schema = z.object({
   user: z.string(),

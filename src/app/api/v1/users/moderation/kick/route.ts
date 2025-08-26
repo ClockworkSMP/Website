@@ -4,6 +4,7 @@ import type { Id } from "../../../../../../../convex/_generated/dataModel";
 import { api } from "../../../../../../../convex/_generated/api";
 import type { NextRequest } from "next/server";
 import { KickEvent } from "~/server/client";
+import { auth } from "~/server/auth";
 
 const schema = z.object({
   user: z.string(),
@@ -104,12 +105,12 @@ export async function POST(req: NextRequest) {
   });
 
   if (data.reason) {
-    KickEvent.withReason(user.minecraft, data.reason).send(
+    await KickEvent.withReason(user.minecraft, data.reason).send(
       server.serverIp,
       server.apiKey,
     );
   } else {
-    KickEvent.player(user.minecraft).send(server.serverIp, server.apiKey);
+    await KickEvent.player(user.minecraft).send(server.serverIp, server.apiKey);
   }
 
   return Response.json({ status: true });

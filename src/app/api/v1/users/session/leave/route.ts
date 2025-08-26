@@ -2,8 +2,21 @@ import { z } from "zod";
 import { api } from "../../../../../../../convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import type { NextRequest } from "next/server";
+import { auth } from "~/server/auth";
 
 export async function POST(req: NextRequest) {
+  const server = await auth(req);
+  if (!server) {
+    return Response.json(
+      {
+        status: false,
+      },
+      {
+        status: 401,
+      },
+    );
+  }
+
   const schema = z.object({
     username: z.string(),
     timestamp: z.number(),
@@ -31,11 +44,35 @@ export async function POST(req: NextRequest) {
   });
 
   if (!user) {
-    return;
+    return Response.json({
+      status: false,
+      reason: "User not found",
+      code: 4,
+      data: {
+        username: data.username,
+      },
+    });
+  }
+
+  const profile = await fetchQuery(api.users.getProfile, {
+    id: user._id,
+    server: server._id,
+  });
+
+  if (!profile) {
+    return Response.json({
+      status: false,
+      reason: "User not found",
+      code: 4,
+      data: {
+        username: data.username,
+      },
+    });
   }
 
   await fetchMutation(api.sessions.endSession, {
-    user: user._id,
+    user: profile._id,
+    server: server._id,
     leftAt: data.timestamp,
   });
   return Response.json({

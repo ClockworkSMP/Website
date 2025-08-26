@@ -179,8 +179,9 @@ export async function POST(req: NextRequest) {
     }
 
     await fetchMutation(api.sessions.createSession, {
-      user: user._id,
+      user: profile._id,
       joinedAt: data.timestamp,
+      server: server._id,
       ip: data.ip,
     });
 

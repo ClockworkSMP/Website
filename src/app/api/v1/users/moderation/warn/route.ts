@@ -4,6 +4,7 @@ import type { Id } from "../../../../../../../convex/_generated/dataModel";
 import { api } from "../../../../../../../convex/_generated/api";
 import type { NextRequest } from "next/server";
 import { MessageEvent } from "~/server/client";
+import {auth} from "~/server/auth";
 
 const schema = z.object({
   user: z.string(),
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (data.reason) {
-    MessageEvent.message(user.minecraft, data.reason, true).send(
+    await MessageEvent.message(user.minecraft, data.reason, true).send(
       server.serverIp,
       server.apiKey,
     );
