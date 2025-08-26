@@ -105,12 +105,12 @@ export async function POST(req: NextRequest) {
   });
 
   if (data.reason) {
-    await KickEvent.withReason(user.minecraft, data.reason).send(
+    await KickEvent.withReason(data.user, data.reason).send(
       server.serverIp,
       server.apiKey,
     );
   } else {
-    await KickEvent.player(user.minecraft).send(server.serverIp, server.apiKey);
+    await KickEvent.player(data.user).send(server.serverIp, server.apiKey);
   }
 
   return Response.json({ status: true });

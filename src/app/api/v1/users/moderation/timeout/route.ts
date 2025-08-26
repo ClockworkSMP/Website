@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (data.reason) {
-    await MessageEvent.message(user.minecraft, data.reason, true).send(
+    await MessageEvent.message(data.user, data.reason, true).send(
       server.serverIp,
       server.apiKey,
     );
