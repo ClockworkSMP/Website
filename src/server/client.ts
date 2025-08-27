@@ -247,7 +247,7 @@ export class OpEvent extends Event {
 
 export class DeOpEvent extends Event {
   static deop(player: string) {
-    return new DeopEvent({
+    return new DeOpEvent({
       player,
     });
   }

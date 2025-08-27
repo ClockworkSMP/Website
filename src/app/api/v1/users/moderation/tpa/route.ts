@@ -27,39 +27,42 @@ Codes:
 */
 
 export async function POST(req: NextRequest) {
-  const data = (await req.json()) as
-    | z.infer<typeof reqSchema>
-    | z.infer<typeof respSchema>;
-  const reqData = reqSchema.safeParse(data);
-  const respData = respSchema.safeParse(data);
-
-  if (reqData.success) {
-    
-
-    await fetchMutation(api.moderation.createTpa, {
-      from: reqData.data.from,
-      to: reqData.data.to,
-      timestamp: Date.now(),
-    });
-  } else if (respData.success) {
-    const user = await fetchQuery(api.users.queryUser, {
-      minecraft: respData.data.user
-    })
-    if (!user) {
-      return Response.json({
-        status: false,
-        codes: 102
-      })
-    }
-    if (respData.data.type == "accept") {
-      await fetchMutation(api.moderation.acceptTpa, {
-        user: user._id 
-      })
-    }
-  } else {
-    return Response.json({
-      status: false,
-      code: 2,
-    });
-  }
+  return Response.json({ status: true });
 }
+
+//   const data = (await req.json()) as
+//     | z.infer<typeof reqSchema>
+//     | z.infer<typeof respSchema>;
+//   const reqData = reqSchema.safeParse(data);
+//   const respData = respSchema.safeParse(data);
+
+//   if (reqData.success) {
+
+
+//     await fetchMutation(api.moderation.createTpa, {
+//       from: reqData.data.from,
+//       to: reqData.data.to,
+//       timestamp: Date.now(),
+//     });
+//   } else if (respData.success) {
+//     const user = await fetchQuery(api.users.queryUser, {
+//       minecraft: respData.data.user
+//     })
+//     if (!user) {
+//       return Response.json({
+//         status: false,
+//         codes: 102
+//       })
+//     }
+//     if (respData.data.type == "accept") {
+//       await fetchMutation(api.moderation.acceptTpa, {
+//         user: user._id 
+//       })
+//     }
+//   } else {
+//     return Response.json({
+//       status: false,
+//       code: 2,
+//     });
+//   }
+// }

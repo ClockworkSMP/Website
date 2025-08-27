@@ -4,6 +4,8 @@ import { api } from "../../../../../../../convex/_generated/api";
 import type { NextRequest } from "next/server";
 import { auth } from "~/server/auth";
 import { minecraftToDiscord } from "../encoder";
+import { redisClient } from "~/server/redis";
+import { MessageEvent } from "~/server/discord";
 
 const Codes = {
   0: "Success",
@@ -117,17 +119,21 @@ export async function POST(req: NextRequest) {
     profiles: allProfiles.map((u) => u._id),
   });
 
+  const discord = minecraftToDiscord(data.message, allUsers);
+
   await fetchMutation(api.messages.createMessage, {
     from: profile._id,
     raw: data.message,
     minecraft: data.message,
-    discord: minecraftToDiscord(data.message, allUsers),
+    discord,
     loc: "minecraft",
     timestamp: data.timestamp,
     server: server._id,
   });
 
-
+  void redisClient.publish(server._id, JSON.stringify(
+    MessageEvent.message(server.messagesChannel, discord)
+  ))  
 
   return Response.json({
     status: true,
