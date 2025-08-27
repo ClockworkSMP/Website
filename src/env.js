@@ -20,8 +20,9 @@ export const env = createEnv({
     }
     return val.split(",");
   }, z.array(z.string())),
-  AUTH_TOKEN: z.string(),
-
+    AUTH_TOKEN: z.string(),
+    REDIS_URL: z.string(),
+    REDIS_TOKEN: z.string(),
   },
 
   /**
@@ -44,6 +45,8 @@ export const env = createEnv({
     BANNED_DISCORDS: process.env.BANNED_DISCORDS,
     BANNED_MINECRAFT: process.env.BANNED_MINECRAFT,
     AUTH_TOKEN: process.env.AUTH_TOKEN,
+    REDIS_URL: process.env.REDIS_URL,
+    REDIS_TOKEN: process.env.REDIS_TOKEN,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

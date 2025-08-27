@@ -47,6 +47,7 @@ export const createServer = mutation({
       v.union(v.literal("end"), v.literal("overworld"), v.literal("nether")),
     ),
     serverIp: v.string(),
+    messagesChannel: v.string(),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("server", {
@@ -64,6 +65,7 @@ export const createServer = mutation({
       disableElytra: args.disableElytra,
       disableDimension: args.disableDimension,
       serverIp: args.serverIp,
+      messagesChannel: args.messagesChannel,
     });
   },
 });

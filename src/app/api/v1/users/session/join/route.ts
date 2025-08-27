@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (!user.minecraft) {
-      await KickEvent.withReason(data.username, "User not created").send(
+    if (!user.minecraftUUID) {
+      void KickEvent.withReason(data.username, "User not created").send(
         server.serverIp,
         server.apiKey,
       );
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!profile) {
-      await KickEvent.withReason("User not found").send(
+      void KickEvent.withReason("User not found").send(
         server.serverIp,
         server.apiKey,
       );
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (profile.status === "banned") {
-      await KickEvent.withReason(user.minecraft, "You are banned").send(
+      await KickEvent.withReason(user.minecraftUUID, "You are banned").send(
         server.serverIp,
         server.apiKey,
       );
@@ -117,10 +117,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (server.lockTo && !server.lockTo.includes(profile.status)) {
-      await KickEvent.withReason(user.minecraft, "Currently in maintenance mode").send(
-        server.serverIp,
-        server.apiKey,
-      );
+      await KickEvent.withReason(
+        user.minecraftUUID,
+        "Currently in maintenance mode",
+      ).send(server.serverIp, server.apiKey);
 
       return Response.json({
         status: false,
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (duplicateIp) {
-      await KickEvent.withReason(user.minecraft, "Duplicate IPs").send(
+      await KickEvent.withReason(user.minecraftUUID, "Duplicate IPs").send(
         server.serverIp,
         server.apiKey,
       );
@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
       user.discord &&
       user.discord in env.BANNED_DISCORDS
     ) {
-      await KickEvent.withReason(user.minecraft, "201").send(
+      await KickEvent.withReason(user.minecraftUUID, "201").send(
         server.serverIp,
         server.apiKey,
       );
@@ -181,8 +181,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (env.BANNED_MINECRAFT && user.minecraft && user.minecraft in env.BANNED_MINECRAFT) {
-      await KickEvent.withReason(user.minecraft, "201").send(
+    if (
+      env.BANNED_MINECRAFT &&
+      user.minecraftUUID &&
+      user.minecraftUUID in env.BANNED_MINECRAFT
+    ) {
+      await KickEvent.withReason(user.minecraftUUID, "201").send(
         server.serverIp,
         server.apiKey,
       );

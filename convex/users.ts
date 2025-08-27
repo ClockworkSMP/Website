@@ -20,21 +20,87 @@ export const queryUser = query({
     if (args.minecraft) {
       return await ctx.db
         .query("users")
-        .withIndex("minecraft", (q) => q.eq("minecraft", args.minecraft))
+        .withIndex("minecraftUUID", (q) =>
+          q.eq("minecraftUUID", args.minecraft!),
+        )
         .unique();
     }
+  },
+});
+
+export const queryProfile = query({
+  args: {
+    id: v.optional(v.id("users")),
+    discord: v.optional(v.string()),
+    minecraft: v.optional(v.string()),
+    server: v.id("server"),
+  },
+  handler: async (ctx, args) => {
+    if (args.id) {
+      return await ctx.db
+        .query("profile")
+        .withIndex("serverUser", (q) =>
+          q.eq("server", args.server).eq("user", args.id!),
+        )
+        .first();
+    }
+    let user = null;
+    if (args.discord) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("discord", (q) => q.eq("discord", args.discord!))
+        .unique();
+    }
+    if (args.minecraft) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("minecraftUUID", (q) =>
+          q.eq("minecraftUUID", args.minecraft!),
+        )
+        .unique();
+    }
+    if (!user) {
+      return null;
+    }
+    return await ctx.db
+      .query("profile")
+      .withIndex("serverUser", (q) =>
+        q.eq("server", args.server).eq("user", user._id),
+      )
+      .first();
+  },
+});
+
+export const bulkQueryUsers = query({
+  args: {
+    server: v.id("server"),
+    discord: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return (
+      await Promise.all(
+        args.discord.map(async (d) =>
+          ctx.db
+            .query("users")
+            .withIndex("discord", (q) => q.eq("discord", d))
+            .unique(),
+        ),
+      )
+    ).filter((u) => u !== null);
   },
 });
 
 export const registerUser = mutation({
   args: {
     discord: v.union(v.string(), v.null()),
-    minecraft: v.string(),
+    minecraftUUID: v.string(),
+    minecraftName: v.string(),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("users", {
       discord: args.discord,
-      minecraft: args.minecraft,
+      minecraftUUID: args.minecraftUUID,
+      minecraftName: args.minecraftName,
       ips: [],
     });
   },
@@ -85,6 +151,37 @@ export const getProfile = query({
   },
 });
 
+export const getserverProfiles = query({
+  args: {
+    server: v.id("server"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("profile")
+      .withIndex("server", (q) => q.eq("server", args.server))
+      .collect();
+  },
+});
+
+export const getBulkUsers = query({
+  args: {
+    profiles: v.array(v.id("profile")),
+  },
+  handler: async (ctx, args) => {
+    return (
+      await Promise.all(
+        args.profiles.map(async (p) => {
+          const profile = await ctx.db.get(p);
+          if (!profile) {
+            return null;
+          }
+          return await ctx.db.get(profile.user);
+        }),
+      )
+    ).filter((u) => u !== null);
+  },
+});
+
 export const isValidUser = query({
   args: {
     id: v.optional(v.id("users")),
@@ -104,7 +201,9 @@ export const isValidUser = query({
     if (args.minecraft && args.minecraft.trim() !== "") {
       const users = await ctx.db
         .query("users")
-        .withIndex("minecraft", (q) => q.eq("minecraft", args.minecraft))
+        .withIndex("minecraftUUID", (q) =>
+          q.eq("minecraftUUID", args.minecraft!),
+        )
         .collect();
       return users.length > 0;
     }
@@ -128,7 +227,7 @@ export const linkMinecraftUser = mutation({
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
-      minecraft: args.minecraft,
+      minecraftUUID: args.minecraft,
     });
   },
 });

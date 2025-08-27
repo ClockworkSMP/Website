@@ -30,19 +30,24 @@ export const createMessage = mutation({
       v.literal("minecraft"),
       v.literal("console"),
     ),
-    message: v.string(),
+    minecraft: v.string(),
+    discord: v.string(),
+    raw: v.string(),
     timestamp: v.number(),
     server: v.id("server"),
+    discordId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("messages", {
       server: args.server,
-
       from: args.from,
       to: args.to,
-      message: args.message,
       loc: args.loc,
       timestamp: args.timestamp,
+      minecraft: args.minecraft,
+      discord: args.discord,
+      raw: args.raw,
+      discordId: args.discordId,
     });
   },
 });

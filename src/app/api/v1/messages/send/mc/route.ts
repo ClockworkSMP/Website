@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "../../../../../../../convex/_generated/api";
-import type { Id } from "../../../../../../../convex/_generated/dataModel";
 import type { NextRequest } from "next/server";
+import { auth } from "~/server/auth";
+import { minecraftToDiscord } from "../encoder";
 
 const Codes = {
   0: "Success",
@@ -13,9 +14,20 @@ const Codes = {
   3: "Invalid timestamp",
   4: "Invalid fromUUID",
   5: "Error",
-}
+};
 
 export async function POST(req: NextRequest) {
+  const server = await auth(req);
+  if (!server) {
+    return Response.json(
+      {
+        status: false,
+      },
+      {
+        status: 401,
+      },
+    );
+  }
   const schema = z.object({
     message: z.string(),
     fromUUID: z.string(),
@@ -54,7 +66,23 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  if (user.status === "banned") {
+  const profile = await fetchQuery(api.users.getProfile, {
+    id: user._id,
+    server: server._id,
+  });
+
+  if (!profile) {
+    return Response.json({
+      status: false,
+      reason: "User not found",
+      code: 4,
+      data: {
+        fromUUID: data.fromUUID,
+      },
+    });
+  }
+
+  if (profile.status === "banned") {
     return Response.json({
       status: false,
       reason: "Banned",
@@ -66,7 +94,8 @@ export async function POST(req: NextRequest) {
   }
 
   const timedout = await fetchQuery(api.moderation.isTimedout, {
-    user: user._id,
+    user: profile._id,
+    server: server._id,
   });
 
   if (timedout) {
@@ -80,16 +109,28 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  const allProfiles = await fetchQuery(api.users.getserverProfiles, {
+    server: server._id,
+  });
+
+  const allUsers = await fetchQuery(api.users.getBulkUsers, {
+    profiles: allProfiles.map((u) => u._id),
+  });
+
   await fetchMutation(api.messages.createMessage, {
-    from: data.fromUUID as Id<"users">,
-    to: data.toUUID as Id<"users">,
-    message: data.message,
+    from: profile._id,
+    raw: data.message,
+    minecraft: data.message,
+    discord: minecraftToDiscord(data.message, allUsers),
     loc: "minecraft",
     timestamp: data.timestamp,
+    server: server._id,
   });
+
+
 
   return Response.json({
     status: true,
-    code: 0
-  });g
+    code: 0,
+  });
 }

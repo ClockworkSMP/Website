@@ -5,11 +5,14 @@ export default defineSchema({
   users: defineTable({
     ips: v.array(v.string()),
     discord: v.union(v.string(), v.null()),
-    minecraft: v.optional(v.string()),
+    minecraftUUID: v.string(),
+    minecraftName: v.string(),
     linkedAt: v.optional(v.number()),
   })
     .index("discord", ["discord"])
-    .index("minecraft", ["minecraft"]),
+    .index("minecraftUUID", ["minecraftUUID"])
+    .index("minecraftName", ["minecraftName"]),
+
   profile: defineTable({
     user: v.id("users"),
     server: v.id("server"),
@@ -64,9 +67,11 @@ export default defineSchema({
 
   messages: defineTable({
     server: v.id("server"),
-
+    discordId: v.optional(v.string()),
+    minecraft: v.string(),
+    discord: v.string(),
+    raw: v.string(),
     from: v.id("profile"),
-    message: v.string(),
     timestamp: v.number(),
     to: v.optional(v.id("profile")),
     moderation: v.optional(v.id("moderationLog")),
@@ -147,6 +152,7 @@ export default defineSchema({
     onlineChannel: v.string(),
     playersCategory: v.string(),
     whitelistChannel: v.string(),
+    messagesChannel: v.string(),
     logChannel: v.string(),
     botToken: v.string(),
     serverIp: v.string(),
