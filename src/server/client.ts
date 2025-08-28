@@ -22,19 +22,23 @@ export class Event {
   }
 
   async send(url: string, apiKey: string) {
-    await fetch(`http://${url}`, {
-      method: "POST",
-      body: JSON.stringify({
-        type: this.name,
-        data: {
-          id: this.id,
-          ...this.data,
+    try {
+      await fetch(`http://${url}`, {
+        method: "POST",
+        body: JSON.stringify({
+          type: this.name,
+          data: {
+            id: this.id,
+            ...this.data,
+          },
+        }),
+        headers: {
+          "x-api-key": apiKey,
         },
-      }),
-      headers: {
-        "x-api-key": apiKey,
-      }
-    });
+      });
+    } catch (e) {
+      console.log("Error in KickEvent: " + String(e));
+    }
   }
 }
 
@@ -43,14 +47,14 @@ export class BannerHeaderEvent extends Event {
     return new BannerHeaderEvent({
       header: header,
       reset: false,
-    })
+    });
   }
 
   static reset(player: string) {
     return new BannerHeaderEvent({
       player,
       reset: true,
-    })
+    });
   }
 
   static player(player: string, header: string) {
@@ -58,7 +62,7 @@ export class BannerHeaderEvent extends Event {
       player,
       header,
       reset: false,
-    })
+    });
   }
 }
 
@@ -96,10 +100,10 @@ export class BannerNameEvent extends Event {
 }
 
 export class BroadcastEvent extends Event {
-  static message(message: string, override=true) {
+  static message(message: string, override = true) {
     return new BroadcastEvent({
       message,
-      override
+      override,
     });
   }
 }
@@ -111,7 +115,6 @@ export class DisableDimensionEvent extends Event {
     });
   }
 }
-
 
 export class DisableElytraEvent extends Event {
   static dimension(dimension: level) {
@@ -144,7 +147,10 @@ export class KickEvent extends Event {
     });
   }
 
-  static withReason(player: string, reason="You were kicked from the server") {
+  static withReason(
+    player: string,
+    reason = "You were kicked from the server",
+  ) {
     return new KickEvent({
       player,
       reason,
@@ -161,7 +167,6 @@ export class KickKillServerEvent extends Event {
     return new KickKillServerEvent({ enable: false });
   }
 }
-
 
 export class MessageEvent extends Event {
   static message(player: string, message: string, override = true) {
@@ -184,7 +189,9 @@ export class NukeEvent extends Event {
 }
 
 export class StopEvent extends Event {
-  static server() { return new StopEvent() }
+  static server() {
+    return new StopEvent();
+  }
 }
 
 export class TimeoutEvent extends Event {
@@ -194,17 +201,29 @@ export class TimeoutEvent extends Event {
     });
   }
 
-  static withReason(player: string, reason="You have been timed out", override=true) {
+  static withReason(
+    player: string,
+    reason = "You have been timed out",
+    override = true,
+  ) {
     return new TimeoutEvent({
       player,
       reason,
-      override
+      override,
     });
   }
 }
 
 export class TPEvent extends Event {
-  static player(player: string, dimension: level, x: number, y: number, z: number, yaw: number, pitch: number) {
+  static player(
+    player: string,
+    dimension: level,
+    x: number,
+    y: number,
+    z: number,
+    yaw: number,
+    pitch: number,
+  ) {
     return new TPEvent({
       player,
       dimension,
