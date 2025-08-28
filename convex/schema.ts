@@ -157,20 +157,24 @@ export default defineSchema({
     botToken: v.string(),
     serverIp: v.string(),
     lockTo: v.optional(v.array(v.string())),
-
     disableElytra: v.array(
       v.union(v.literal("end"), v.literal("overworld"), v.literal("nether")),
     ),
     disableDimension: v.array(
       v.union(v.literal("end"), v.literal("overworld"), v.literal("nether")),
     ),
-
     tpaRank: v.union(
       v.literal("admin"),
       v.literal("mod"),
       v.literal("helper"),
       v.literal("whitelisted"),
     ),
+    whitelistQuestions: v.array(v.union(
+      v.object({}),
+      v.object({}),
+      v.object({}),
+      v.object({}),
+    ))
   })
     .index("name", ["name"])
     .index("apiKey", ["apiKey"])

@@ -170,7 +170,7 @@ export class KickKillServerEvent extends Event {
 
 export class MessageEvent extends Event {
   static message(player: string, message: string, override = true) {
-    return new BroadcastEvent({
+    return new MessageEvent({
       player,
       message,
       override,
