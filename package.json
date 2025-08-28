@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.12.0",
-    "@upstash/redis": "^1.35.3",
     "convex": "^1.25.4",
     "discord.js": "^14.22.1",
     "next": "^15.2.3",
